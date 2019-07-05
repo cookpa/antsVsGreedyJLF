@@ -1,47 +1,79 @@
 library(ggplot2)
 
-antsDice = read.csv("antsRegAntsJLFDiceBilateral.csv", row.names = 1)
-greedyDice = read.csv("greedyRegGreedyJLFDiceBilateral.csv", row.names = 1)
+compareMethods <- function(methodA, methodAName, methodB, methodBName) {
 
-numLabels = ncol(antsDice)
+  numLabels = ncol(methodA)
+  
+  p = vector("numeric", numLabels)
+  t = vector("numeric", numLabels)
+  q = vector("numeric", numLabels)
+  e = vector("numeric", numLabels)
 
-p = vector("numeric", numLabels)
-t = vector("numeric", numLabels)
-q = vector("numeric", numLabels)
-e = vector("numeric", numLabels)
+  for (i in 1:numLabels) {
+    x = t.test(methodA[,i], methodB[,i], paired = T)
+    p[i] = x$p.value
+    t[i] = x$statistic
+    e[i] = x$estimate
+  }
 
-for (i in 1:numLabels) {
-  x = t.test(antsDice[,i], greedyDice[,i], paired = T)
-  p[i] = x$p.value
-  t[i] = x$statistic
-  e[i] = x$estimate
+  q = p.adjust(p, method = "fdr")
+
+  which(q < 0.05)
+
+  methodAMeans = colMeans(methodA)
+  methodASD = apply(methodA, 2, sd)
+  
+  methodBMeans = colMeans(methodB)
+  methodBSD = apply(methodB, 2, sd)
+  
+  dfBarsA = data.frame(Region = factor(colnames(methodA)), Mean = methodAMeans, SD = methodASD, Algorithm = rep(methodAName, numLabels))
+  dfBarsB = data.frame(Region = factor(colnames(methodB)), Mean = methodBMeans, SD = methodBSD, Algorithm = rep(methodBName, numLabels))
+  
+  dfBars = rbind(dfBarsA, dfBarsB)
+  
+  return(list(estimate = e, t.stat = t, p.value = p, fdrq.value = q, barPlotData = dfBars))
+  
 }
 
 
-for (i in 1:numLabels) {
-  x = t.test(antsDiceDouble[,i], antsDice[,i], paired = T)
-  p[i] = x$p.value
-  t[i] = x$statistic
-  e[i] = x$estimate
+plotMethods <- function(barPlotData) {
+
+  ggplot(data=barPlotData, aes(x=Region, y=Mean, fill=Algorithm)) +
+    geom_bar(stat="identity", position=position_dodge()) +
+    scale_fill_brewer(palette="Paired") +
+    geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2, position=position_dodge(.9)) +
+    theme_minimal() + coord_flip() + ylab("Mean Dice")
+  
 }
 
-q = p.adjust(p, method = "fdr")
 
-which(q < 0.05)
+antsRegAntsJLFDice = read.csv("stats/antsRegAntsJLFDiceBilateral.csv", row.names = 1)
+greedyRegGreedyJLFDice = read.csv("stats/greedyRegGreedyJLFDiceBilateral.csv", row.names = 1)
 
-antsMeans = colMeans(antsDice)
-antsSD = apply(antsDice, 2, sd)
+antsRegGreedyJLFDice = read.csv("stats/antsRegGreedyJLFDiceBilateral.csv", row.names = 1)
+greedyRegAntsJLFDice = read.csv("stats/greedyRegAntsJLFDiceBilateral.csv", row.names = 1)
 
-greedyMeans = colMeans(greedyDice)
-greedySD = apply(greedyDice, 2, sd)
 
-dfBarsAnts = data.frame(Region = factor(colnames(antsDice)), Mean = antsMeans, SD = antsSD, Algorithm = rep("ANTs", numLabels))
-dfBarsGreedy = data.frame(Region = factor(colnames(antsDice)), Mean = greedyMeans, SD = greedySD, Algorithm = rep("Greedy", numLabels))
+# Plot cortical labels separately
+dfBarsCorticalIndices = c(15:63,78:126)
+dfBarsSubCorticalIndices = c(1:14,64:77)
 
-dfBars = rbind(dfBarsAnts, dfBarsGreedy)
+antsVsGreedy = compareMethods(antsRegAntsJLFDice, "ANTs", greedyRegGreedyJLFDice, "Greedy")
 
-ggplot(data=dfBars, aes(x=Region, y=Mean, fill=Algorithm)) +
-  geom_bar(stat="identity", position=position_dodge()) +
-  scale_fill_brewer(palette="Paired") +
-  geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2, position=position_dodge(.9)) +
-  theme_minimal() + coord_flip() + ylab("Mean Dice")
+plotMethods(antsVsGreedy$barPlotData)
+plotMethods(antsVsGreedy$barPlotData[dfBarsCorticalIndices,])
+
+# Compare JLF
+antsRegCompareJLF = compareMethods(antsRegAntsJLFDice, "ANTsJLF", antsRegGreedyJLFDice, "GreedyJLF")
+plotMethods(antsRegCompareJLF$barPlotData[dfBarsCorticalIndices,])
+
+greedyRegCompareJLF = compareMethods(greedyRegAntsJLFDice, "ANTsJLF", greedyRegGreedyJLFDice, "GreedyJLF")
+plotMethods(greedyRegCompareJLF$barPlotData[dfBarsCorticalIndices,])
+
+# Compare Reg
+antsJLFCompareReg = compareMethods(antsRegAntsJLFDice, "AntsRegANTsJLF", greedyRegAntsJLFDice, "GreedyRegANTsJLF")
+plotMethods(antsJLFCompareReg$barPlotData[dfBarsCorticalIndices,])
+
+greedyJLFCompareReg = compareMethods(antsRegGreedyJLFDice, "AntsRegGreedyJLF", greedyRegGreedyJLFDice, "GreedyRegGreedyJLF")
+plotMethods(antsJLFCompareReg$barPlotData[dfBarsCorticalIndices,])
+

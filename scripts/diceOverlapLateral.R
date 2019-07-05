@@ -1,7 +1,7 @@
 library(ANTsR)
 
 ## labelList should be leftLabelID,LeftLabelName,RightLabelID,RightLabelName
-diceOverlap = function(groundTruthSeg, candidateSeg, labelList) {
+diceOverlap <- function(groundTruthSeg, candidateSeg, labelList) {
 
   # Number of bilateral labels, where Left and Right versions exist for each
   numLabels = nrow(labelList)
@@ -54,10 +54,38 @@ diceOverlap = function(groundTruthSeg, candidateSeg, labelList) {
   
 }
 
+writeDiceOverlap <- function(groundTruthImages, labelList, jlfImages, outputRoot) {
+
+  numSubj = length(jlfImages)
+  numLabels = nrow(labelList)
+
+  dice = data.frame()
+  diceBilateral =  data.frame()
+
+  for (i in 1:numSubj) {
+    print(paste("Processing subject", subjects[i]))
+  
+    subjectResults = diceOverlap(groundTruth[[i]], jlfImages[[i]], labelList)
+  
+    dice = rbind(dice, subjectResults[[1]])
+    diceBilateral = rbind(diceBilateral, subjectResults[[2]])
+}
+
+
+  row.names(dice) = subjects
+  row.names(diceBilateral) = subjects
+
+  write.csv(dice, paste(outputRoot, "Dice.csv", sep = ""))
+  write.csv(diceBilateral, paste(outputRoot, "DiceBilateral.csv", sep = ""))
+
+}
+
 subjects = c("1000", "1001", "1002", "1006", "1007", "1008", "1009", "1010", "1011", "1012", "1013", "1014", "1015", "1036", "1017", "1003", "1004", "1005", 
              "1018", "1019", "1101", "1104", "1107", "1110", "1113", "1116", "1119", "1122", "1125", "1128")
 
 numSubj = length(subjects)
+
+labelList = read.csv("labelInfo/mindBoggleNonIgnoreBilateral.csv")
 
 antsJLF = list()
 greedyJLF = list()
@@ -69,37 +97,14 @@ for (i in 1:numSubj) {
   groundTruth[[i]] = antsImageRead( paste("groundTruth/", subjects[i], "_3_seg.nii.gz", sep = "") )
 }
 
-labelList = read.csv("mindBoggleNonIgnoreBilateral.csv")
+writeDiceOverlap(groundTruth, labelList, antsJLF, "stats/antsRegAntsJLF")
+writeDiceOverlap(groundTruth, labelList, greedyJLF, "stats/greedyRegGreedyJLF")
 
-numLabels = nrow(labelList)
-
-antsDice = data.frame()
-greedyDice = data.frame()
-
-antsDiceBilateral =  data.frame()
-greedyDiceBilateral = data.frame()
-
+# Get results with different label fusion algorithms
 for (i in 1:numSubj) {
-  print(paste("Processing subject", subjects[i]))
-  
-  subjectANTsResults = diceOverlap(groundTruth[[i]], antsJLF[[i]], labelList)
-  subjectGreedyResults = diceOverlap(groundTruth[[i]], greedyJLF[[i]], labelList)
-  
-  antsDice = rbind(antsDice, subjectANTsResults[[1]])
-  greedyDice = rbind(greedyDice, subjectGreedyResults[[1]])
- 
-  antsDiceBilateral = rbind(antsDiceBilateral, subjectANTsResults[[2]])
-  greedyDiceBilateral = rbind(greedyDiceBilateral, subjectGreedyResults[[2]])
+  antsJLF[[i]] = antsImageRead( paste("results/antsRegGreedyJLF/", subjects[i], "Labels.nii.gz", sep = "") )
+  greedyJLF[[i]] = antsImageRead( paste("results/greedyRegANTsJLF/", subjects[i], "Labels.nii.gz", sep = "") )
 }
 
-row.names(antsDice) = subjects
-row.names(greedyDice) = subjects
-
-write.csv(antsDice, "stats/antsRegAntsJLFDice.csv")
-write.csv(greedyDice, "stats/greedyRegGreedyJLFDice.csv")
-
-row.names(antsDiceBilateral) = subjects
-row.names(greedyDiceBilateral) = subjects
-
-write.csv(antsDiceBilateral, "stats/antsRegAntsJLFDiceBilateral.csv")
-write.csv(greedyDiceBilateral, "stats/greedyRegGreedyJLFDiceBilateral.csv")
+writeDiceOverlap(groundTruth, labelList, antsJLF, "stats/antsRegGreedyJLF")
+writeDiceOverlap(groundTruth, labelList, greedyJLF, "stats/greedyRegANTsJLF")
