@@ -5,9 +5,11 @@ use File::Path;
 
 my $usage = qq{
 
-  $0 subjToLabel deformedAtlasesBaseDir outputBaseDir
+  $0 subjToLabel <deformedAtlasesBaseDir> <outputBaseDir>
 
   Runs ANTs JLF on deformed atlases in deformedAtlasesBaseDir/subjToLabel
+ 
+  Fixed space mask for JLF should be in the same directory.
 
   Will save deformed images and labels in outputBaseDir/subjToLabel
 

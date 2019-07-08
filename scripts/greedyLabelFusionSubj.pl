@@ -6,9 +6,11 @@ use File::Basename;
 
 my $usage = qq{
 
-  $0 subjToLabel deformedAtlasesBasedir outputBaseDir
+  $0 subjToLabel <deformedAtlasesBasedir> <outputBaseDir>
 
   Reads deformed images and segmentations from deformedAtlasesBasedir/subjToLabel
+
+  Fixed space mask for JLF should be in the same directory.
 
   Will save output in outputBaseDir/subjToLabel
 
