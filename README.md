@@ -43,16 +43,60 @@ embed detailed version information into the executable, but it is only used to d
 `label_fusion` was provided in binary form by Paul Yushkevich.
 
 
+## Parameter settings
+
+Defining equivalent parameters between software is difficult, but I have tried to make the
+calls as close as possible.
+
+
 ## Registration parameters
+
+### Registration stages
+
+The stages are
+
+  * Center of mass alignment by translation
+  * Rigid registration (6 DOF)
+  * Affine registration (12 DOF)
+  * Deformable registration
 
 The number of iterations for both algorithms was defined by `antsRegistrationSyN.sh`. 
 
+ANTs uses Mattes Mutual Information for the rigid and affine stages, and normalized
+cross-correlation for the deformable stage. Greedy uses NCC for all stages.
+
+### Gradient parameters
+
+ANTs uses a fixed smoothing term for the update and total field for all levels. It also
+spatially smoothes the images at each level.
+
+Greedy does not appear to smooth the data, rather the update and total field smoothing
+sigmas increase for each level.
+
+The default SyN parameters are [3,0] for the update and total field, respectively. In
+greedy, which specifies sigma rather than sigma^2, the default is [sqrt(3), sqrt(0.5)].
+ 
+Another difference is in the gradient step size. For ANTs scripts, a conservative value of
+0.1 is used. In greedy, the default is 1.0 but the manual suggests 0.25 to 0.5. I'm not
+sure the parameters are equivalently scaled across software.
 
 ## Labeling algorithm
 
 The defaults were used for `antsJointFusion` and `label_fusion`.
 
-For parameter details, see the scripts `antsLabelSubjectLOO.pl` and `greedyLabelSubjectLOO.pl`.
+For code details, see the scripts `antsLabelSubjectLOO.pl` and `greedyLabelSubjectLOO.pl`, which 
+run each pipeline. Separately, the scripts `antsJointFusionSubj.pl` and `greedyLabelFusionSubj.pl`
+are used to apply ANTs / Greedy JLF to registrations run with Greedy / ANTs.
+
+Some parameter settings
+
+| Parameter     | `antsJointFusion` | `label_fusion` |
+| ------------- | -----------------:| --------------:|
+| alpha         | 0.1               | 0.1            |
+| beta          | 2.0               | 2.0            |
+| patch radius  | 2x2x2             | ?              |
+| search radius | 3x3x3             | 3x3x3          |
+| patch metric  | Pearson's correlation | ?          |
 
 
 ## Computation time
