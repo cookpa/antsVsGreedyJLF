@@ -94,7 +94,7 @@ Some parameter settings
 | ------------- | -----------------:| --------------:|
 | alpha         | 0.1               | 0.1            |
 | beta          | 2.0               | 2.0            |
-| patch radius  | 2x2x2             | ?              |
+| patch radius  | 2x2x2             | 3x3x3          |
 | search radius | 3x3x3             | 3x3x3          |
 | patch metric  | Pearson's correlation | ?          |
 

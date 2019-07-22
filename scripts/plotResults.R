@@ -1,25 +1,33 @@
 library(ggplot2)
 
 compareMethods <- function(methodA, methodAName, methodB, methodBName) {
-
+  
   numLabels = ncol(methodA)
+  
+  Region = factor(colnames(methodA))
+  
+  RegionB = factor(colnames(methodB))
+  
+  if ( !(all.equal(Region,RegionB)) ) {
+    stop("Region labels are not identical for both methods")
+  }
   
   p = vector("numeric", numLabels)
   t = vector("numeric", numLabels)
   q = vector("numeric", numLabels)
   e = vector("numeric", numLabels)
-
+  
   for (i in 1:numLabels) {
     x = t.test(methodA[,i], methodB[,i], paired = T)
     p[i] = x$p.value
     t[i] = x$statistic
     e[i] = x$estimate
   }
-
+  
   q = p.adjust(p, method = "fdr")
-
+  
   which(q < 0.05)
-
+  
   methodAMeans = colMeans(methodA)
   methodASD = apply(methodA, 2, sd)
   
@@ -31,9 +39,12 @@ compareMethods <- function(methodA, methodAName, methodB, methodBName) {
   
   dfBars = rbind(dfBarsA, dfBarsB)
   
-  return(list(estimate = e, t.stat = t, p.value = p, fdrq.value = q, barPlotData = dfBars))
+  dfTTest = data.frame(Region = Region, estimate = e, t.stat = t, p.value = p, fdrq.value = q)
+  
+  return(list(tTestData = dfTTest, barPlotData = dfBars))
   
 }
+
 
 
 plotMethods <- function(barPlotData) {
