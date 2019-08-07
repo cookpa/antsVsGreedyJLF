@@ -83,7 +83,7 @@ system("c3d $brainMask -dilate 1 2x2x2vox -o $jlfMask");
 my @allMovingDeformed = ();
 my @allMovingSegDeformed = ();
 
-my $greedyBase = "greedy -d 3 -threads 1";
+my $greedyBase = "/usr/bin/time -v greedy -d 3 -threads 1";
 
 foreach my $subject (@subjects) {
     
@@ -109,7 +109,7 @@ foreach my $subject (@subjects) {
 	    
 	    my $rigidTransform = "${tmpDir}/${subject}To${subjToLabel}Rigid.mat";
 	    
-	    my $regRigidCmd = "$greedyBase -a -dof 6 -ia $comTransform -o $rigidTransform -i $fixed $moving -m NCC 4x4x4 -n 1000x500x250x100 -gm $regMask";
+	    my $regRigidCmd = "$greedyBase -a -dof 6 -ia $comTransform -o $rigidTransform -i $fixed $moving -m NCC 4x4x4 -n 100x50x50x10 -gm $regMask";
 	    
 	    print "\n--- Reg Rigid Call ---\n$regRigidCmd\n---\n";
 	    
@@ -117,7 +117,7 @@ foreach my $subject (@subjects) {
 	    
 	    my $affineTransform = "${tmpDir}/${subject}To${subjToLabel}Affine.mat";
 	    
-	    my $regAffineCmd = "$greedyBase -a -dof 12 -ia $rigidTransform -o $affineTransform -i $fixed $moving -m NCC 4x4x4 -n 1000x500x250x100 -gm $regMask";
+	    my $regAffineCmd = "$greedyBase -a -dof 12 -ia $rigidTransform -o $affineTransform -i $fixed $moving -m NCC 4x4x4 -n 100x50x50x10 -gm $regMask";
 	    
 	    print "\n--- Reg Affine Call ---\n$regAffineCmd\n---\n";
 	    
@@ -125,7 +125,7 @@ foreach my $subject (@subjects) {
 	    
 	    my $deformableTransform = "${tmpDir}/${subject}To${subjToLabel}Warp.nii.gz";
 	    
-	    my $regDeformableCmd = "$greedyBase -it $affineTransform -o $deformableTransform -i $fixed $moving -m NCC 4x4x4 -n 100x70x50x20 -e 0.25 -wp 0 -gm $regMask";
+	    my $regDeformableCmd = "$greedyBase -it $affineTransform -o $deformableTransform -i $fixed $moving -m NCC 4x4x4 -n 100x70x50x20 -e 1.0 -wp 0 -gm $regMask";
 
 	    print "\n--- Reg Deformable Call ---\n$regDeformableCmd\n---\n";
 	    
