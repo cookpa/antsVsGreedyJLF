@@ -97,8 +97,6 @@ foreach my $subject (@subjects) {
 	
 	if (! -f $movingSegDeformed) {
 	    
-	    my $tmpOutputRoot = "${tmpDir}/${subject}To${subjToLabel}";
-	    
 	    my $comTransform = "${tmpDir}/${subject}To${subjToLabel}COM.mat";
 	    
 	    my $regCOMCmd = "$greedyBase -moments 1 -o $comTransform -det 1 -i $fixed $moving";
