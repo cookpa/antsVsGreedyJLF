@@ -103,7 +103,7 @@ Some parameter settings
 
 The computation time for an ANTs registration was approximately 180 minutes.
 
-The computation time for a greedy registration was approximately 25 minutes.
+The computation time for a greedy registration was approximately 5 minutes.
 
 For the label fusion, `antsLabelFusion` ran in approximately 4 hours, 
 and `label_fusion` in approximately 3 hours. 
